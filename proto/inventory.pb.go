@@ -134,7 +134,6 @@ func (x *Product) GetUpdatedAt() *timestamppb.Timestamp {
 type ListRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PageSize      int32                  `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	PageToken     string                 `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
 	Filter        string                 `protobuf:"bytes,3,opt,name=filter,proto3" json:"filter,omitempty"`
 	OrderBy       string                 `protobuf:"bytes,4,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -178,13 +177,6 @@ func (x *ListRequest) GetPageSize() int32 {
 	return 0
 }
 
-func (x *ListRequest) GetPageToken() string {
-	if x != nil {
-		return x.PageToken
-	}
-	return ""
-}
-
 func (x *ListRequest) GetFilter() string {
 	if x != nil {
 		return x.Filter
@@ -202,7 +194,6 @@ func (x *ListRequest) GetOrderBy() string {
 type ListResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Products      []*Product             `protobuf:"bytes,1,rep,name=products,proto3" json:"products,omitempty"`
-	NextPageToken string                 `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
 	TotalSize     int32                  `protobuf:"varint,3,opt,name=total_size,json=totalSize,proto3" json:"total_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -243,13 +234,6 @@ func (x *ListResponse) GetProducts() []*Product {
 		return x.Products
 	}
 	return nil
-}
-
-func (x *ListResponse) GetNextPageToken() string {
-	if x != nil {
-		return x.NextPageToken
-	}
-	return ""
 }
 
 func (x *ListResponse) GetTotalSize() int32 {
@@ -635,16 +619,13 @@ const file_inventory_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"|\n" +
+	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"]\n" +
 	"\vListRequest\x12\x1b\n" +
-	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x1d\n" +
-	"\n" +
-	"page_token\x18\x02 \x01(\tR\tpageToken\x12\x16\n" +
+	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x16\n" +
 	"\x06filter\x18\x03 \x01(\tR\x06filter\x12\x19\n" +
-	"\border_by\x18\x04 \x01(\tR\aorderBy\"\x85\x01\n" +
+	"\border_by\x18\x04 \x01(\tR\aorderBy\"]\n" +
 	"\fListResponse\x12.\n" +
-	"\bproducts\x18\x01 \x03(\v2\x12.inventory.ProductR\bproducts\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12\x1d\n" +
+	"\bproducts\x18\x01 \x03(\v2\x12.inventory.ProductR\bproducts\x12\x1d\n" +
 	"\n" +
 	"total_size\x18\x03 \x01(\x05R\ttotalSize\"\x1c\n" +
 	"\n" +

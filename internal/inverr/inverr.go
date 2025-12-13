@@ -26,4 +26,8 @@ func (ie *InvError) Error() string {
 var (
 	InvalidPoolConfig = New("failed to parse config", codes.Internal)
 	CreatePoolError = New("failed to create pool", codes.Internal)
+
+	CreateProductError = New("failed to create product", codes.Internal)
+	DeleteProductError = New("failed to delete product", codes.Internal)
+	ListProductsError = New("failed to list product", codes.Internal)
 )

@@ -8,9 +8,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/andro-kes/inventory_service/internals/inverr"
-	"github.com/andro-kes/inventory_service/internals/logger"
-	"github.com/andro-kes/inventory_service/internals/rpc"
+	"github.com/andro-kes/inventory_service/internal/inverr"
+	"github.com/andro-kes/inventory_service/internal/logger"
+	"github.com/andro-kes/inventory_service/internal/rpc"
 	pb "github.com/andro-kes/inventory_service/proto"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
