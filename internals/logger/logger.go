@@ -170,18 +170,22 @@ func Sync() error {
 	return nil
 }
 
-func Logger() *zap.Logger {
+func Logger() (*zap.Logger, error) {
 	if !initialized {
-		_ = Init(Config{})
+		if err := Init(Config{}); err != nil {
+			return nil, err
+		}
 	}
-	return zapLogger
+	return zapLogger, nil
 }
 
-func Sugar() *zap.SugaredLogger {
+func Sugar() (*zap.SugaredLogger, error) {
 	if !initialized {
-		_ = Init(Config{})
+		if err := Init(Config{}); err != nil {
+			return nil, err
+		}
 	}
-	return sugar
+	return sugar, nil
 }
 
 func parseLevel(l string) (zapcore.LevelEnabler, error) {
