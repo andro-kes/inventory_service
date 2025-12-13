@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/field_mask.proto";
+
+package inventory;
+
+option go_package = "./proto;proto";
+
+service InventoryService {
+    rpc ListProducts(ListRequest) returns (ListResponse);
+    rpc GetProduct(GetRequest) returns (GetResponse);
+    rpc CreateProduct(CreateRequest) returns (CreateResponse);
+    rpc UpdateProduct(UpdateRequest) returns (UpdateResponse);
+    rpc DeleteProduct(DeleteRequest) returns (DeleteResponse);
+}
+
+message Product {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    double price = 4;
+    int32 quantity = 5;
+    repeated string tags = 6;
+    bool available = 7;
+    google.protobuf.Timestamp created_at = 8;
+    google.protobuf.Timestamp updated_at = 9;
+}
+
+
+message ListRequest {
+    int32 page_size = 1;
+    string page_token = 2;
+    string filter = 3;
+    string order_by = 4;
+}
+
+message ListResponse {
+    repeated Product products = 1;
+    string next_page_token = 2;
+    int32 total_size = 3;
+}
+
+message GetRequest {
+    string id = 1;
+}
+
+message GetResponse {
+    Product product = 1;
+}
+
+message CreateRequest {
+    Product product = 1;
+}
+
+message CreateResponse {
+    Product product = 1;
+}
+
+message UpdateRequest {
+    Product product = 1;
+    google.protobuf.FieldMask update_mask = 2;
+}
+
+message UpdateResponse {
+    Product product = 1;
+}
+
+message DeleteRequest {
+    string id = 1;
+}
+
+message DeleteResponse {
+    bool success = 1;
+}
