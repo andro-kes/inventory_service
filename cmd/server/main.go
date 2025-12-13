@@ -27,7 +27,10 @@ func main() {
 	if err := logger.Init(cfg); err != nil {
 		panic("failed to init logger")
 	}
-	zl := logger.Logger()
+	zl, err := logger.Logger()
+	if err != nil {
+		panic("wrong init logger")
+	}
 	defer zl.Sync()
 
 	zl.Info("Start inventory service...")
