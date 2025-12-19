@@ -163,7 +163,7 @@ func (pr *productRepo) Update(ctx context.Context, p *pb.Product, mask *fieldmas
         }
     }
 
-	b.Set("update_at = ?", time.Now())
+	b.Set("updated_at = ?", time.Now())
     sql, args := b.Build()
     row := pr.Pool.QueryRow(ctx, sql, args...)
 
