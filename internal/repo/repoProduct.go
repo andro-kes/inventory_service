@@ -41,39 +41,56 @@ func (pr *productRepo) Create(ctx context.Context, p *pb.Product) (*pb.Product, 
 	tx, err := pr.Pool.Begin(ctx)
 	if err != nil {
 		return nil, err
-	}
+		Insert("products").
+		Columns("id", "description", "price", "quantity", "tags", "avaible", "created_at", "updated_at").
+		Values(p.Id, p.Description, p.Price, p.Quantity, p.Tags, p.Available, time.Now(), time.Now()).
+		Returning("id", "description", "price", "quantity", "tags", "avaible", "created_at", "updated_at").
+		Build()
 
-	created := *p
-	row := tx.QueryRow(ctx, sql, args)
-	err = row.Scan(
-		&created.Id,
-		&created.Description,
-		&created.Price,
-		&created.Quantity,
-		&created.Tags,
-		&created.Available,
-		&created.CreatedAt,
-		&created.UpdatedAt,
-	)
+	tx, err := pr.Pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
+
+	var created *pb.Product
+	row := tx.QueryRow(ctx, sql, args...)
+	err = row.Scan(&created)
 	if err != nil {
 		return nil, err
 	}
 
-	return &created, nil
+	if err = tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+
+	return created, nil
 }
 
 func (pr *productRepo) Delete(ctx context.Context, id string) error {
 	sql, args := builder.NewSQLBuilder().
-	Delete().From("products").Where("id = ?", id).Build()
+		Delete().From("products").Where("id = ?", id).Build()
 
 	tx, err := pr.Pool.Begin(ctx)
 	if err != nil {
 		return err
 	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
 
-	_, err = tx.Exec(ctx, sql, args)
+	_, err = tx.Exec(ctx, sql, args...)
+	if err != nil {
+		return err
+	}
 
-	return err
+	if err = tx.Commit(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (pr *productRepo) List(ctx context.Context, prevSize, pageSize int32, filter, orderBy string) ([]*pb.Product, error) {
