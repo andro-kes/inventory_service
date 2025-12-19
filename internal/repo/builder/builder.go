@@ -9,6 +9,9 @@ import (
 // It supports SELECT, INSERT, UPDATE, and DELETE operations with
 // a fluent interface for constructing queries dynamically.
 //
+// The builder generates PostgreSQL-compatible queries with positional
+// placeholders ($1, $2, ...) for use with pgx and other PostgreSQL drivers.
+//
 // Example usage:
 //
 //	// SELECT query
@@ -19,6 +22,7 @@ import (
 //		OrderBy("price DESC").
 //		Limit(10).
 //		Build()
+//	// Result: SELECT id, name, price FROM products WHERE category = $1 ORDER BY price DESC LIMIT 10
 //
 //	// INSERT query
 //	query, args := NewSQLBuilder().
@@ -27,6 +31,7 @@ import (
 //		Values("Laptop", 999.99, "electronics").
 //		Returning("id").
 //		Build()
+//	// Result: INSERT INTO products (name, price, category) VALUES ($1, $2, $3) RETURNING id
 //
 //	// UPDATE query
 //	query, args := NewSQLBuilder().
@@ -36,6 +41,7 @@ import (
 //		Where("id = ?", 123).
 //		Returning("id").
 //		Build()
+//	// Result: UPDATE products SET price = $1, updated_at = $2 WHERE id = $3 RETURNING id
 //
 //	// DELETE query
 //	query, args := NewSQLBuilder().
@@ -44,6 +50,7 @@ import (
 //		Where("id = ?", 123).
 //		Returning("id").
 //		Build()
+//	// Result: DELETE FROM products WHERE id = $1 RETURNING id
 type SQLBuilder struct {
 	queryType  string   // SELECT, INSERT, UPDATE, DELETE
 	selectCols []string // Columns for SELECT
@@ -241,6 +248,21 @@ func (b *SQLBuilder) Build() (string, []any) {
 	}
 }
 
+// replacePlaceholders replaces ? placeholders with PostgreSQL-style $1, $2, etc.
+// The placeholderNum is passed by reference and incremented for each placeholder found.
+func replacePlaceholders(clause string, placeholderNum *int) string {
+	result := ""
+	for i := 0; i < len(clause); i++ {
+		if clause[i] == '?' {
+			result += fmt.Sprintf("$%d", *placeholderNum)
+			*placeholderNum++
+		} else {
+			result += string(clause[i])
+		}
+	}
+	return result
+}
+
 // buildSelect constructs a SELECT query.
 func (b *SQLBuilder) buildSelect() (string, []any) {
 	var query strings.Builder
@@ -264,8 +286,9 @@ func (b *SQLBuilder) buildSelect() (string, []any) {
 	if len(b.whereConds) > 0 {
 		query.WriteString(" WHERE ")
 		conditions := make([]string, len(b.whereConds))
+		placeholderNum := 1
 		for i, cond := range b.whereConds {
-			conditions[i] = cond.condition
+			conditions[i] = replacePlaceholders(cond.condition, &placeholderNum)
 			args = append(args, cond.args...)
 		}
 		query.WriteString(strings.Join(conditions, " AND "))
@@ -308,7 +331,7 @@ func (b *SQLBuilder) buildInsert() (string, []any) {
 	query.WriteString(" VALUES (")
 	placeholders := make([]string, len(b.values))
 	for i := range b.values {
-		placeholders[i] = "?"
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
 	}
 	query.WriteString(strings.Join(placeholders, ", "))
 	query.WriteString(")")
@@ -331,11 +354,12 @@ func (b *SQLBuilder) buildUpdate() (string, []any) {
 	query.WriteString(b.tableName)
 
 	// SET clause
+	placeholderNum := 1
 	if len(b.setClauses) > 0 {
 		query.WriteString(" SET ")
 		clauses := make([]string, len(b.setClauses))
 		for i, set := range b.setClauses {
-			clauses[i] = set.clause
+			clauses[i] = replacePlaceholders(set.clause, &placeholderNum)
 			args = append(args, set.args...)
 		}
 		query.WriteString(strings.Join(clauses, ", "))
@@ -346,7 +370,7 @@ func (b *SQLBuilder) buildUpdate() (string, []any) {
 		query.WriteString(" WHERE ")
 		conditions := make([]string, len(b.whereConds))
 		for i, cond := range b.whereConds {
-			conditions[i] = cond.condition
+			conditions[i] = replacePlaceholders(cond.condition, &placeholderNum)
 			args = append(args, cond.args...)
 		}
 		query.WriteString(strings.Join(conditions, " AND "))
@@ -370,11 +394,12 @@ func (b *SQLBuilder) buildDelete() (string, []any) {
 	query.WriteString(b.tableName)
 
 	// WHERE clause
+	placeholderNum := 1
 	if len(b.whereConds) > 0 {
 		query.WriteString(" WHERE ")
 		conditions := make([]string, len(b.whereConds))
 		for i, cond := range b.whereConds {
-			conditions[i] = cond.condition
+			conditions[i] = replacePlaceholders(cond.condition, &placeholderNum)
 			args = append(args, cond.args...)
 		}
 		query.WriteString(strings.Join(conditions, " AND "))

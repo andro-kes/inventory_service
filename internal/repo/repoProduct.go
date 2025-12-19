@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type ProductRepo interface {
@@ -33,9 +34,9 @@ func NewProductRepo(ctx context.Context, pool *pgxpool.Pool) ProductRepo {
 func (pr *productRepo) Create(ctx context.Context, p *pb.Product) (*pb.Product, error) {
 	sql, args := builder.NewSQLBuilder().
 	Insert("products").
-	Columns("id", "description", "price", "quantity", "tags", "available", "created_at", "updated_at").
-	Values(p.Id, p.Description, p.Price, p.Quantity, p.Tags, p.Available, time.Now(), time.Now()).
-	Returning("id", "description", "price", "quantity", "tags", "available", "created_at", "updated_at").
+	Columns("id", "name", "description", "price", "quantity", "tags", "available", "created_at", "updated_at").
+	Values(p.Id, p.Name, p.Description, p.Price, p.Quantity, p.Tags, p.Available, time.Now(), time.Now()).
+	Returning("id", "name", "description", "price", "quantity", "tags", "available", "created_at", "updated_at").
 	Build()
 
 	tx, err := pr.Pool.Begin(ctx)
@@ -47,9 +48,15 @@ func (pr *productRepo) Create(ctx context.Context, p *pb.Product) (*pb.Product, 
 		_ = tx.Rollback(ctx)
 	}()
 
-	var created *pb.Product
+	var id, name, description string
+	var price float64
+	var quantity int32
+	var tags []string
+	var available bool
+	var createdAt, updatedAt time.Time
+	
 	row := tx.QueryRow(ctx, sql, args...)
-	err = row.Scan(&created)
+	err = row.Scan(&id, &name, &description, &price, &quantity, &tags, &available, &createdAt, &updatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +65,17 @@ func (pr *productRepo) Create(ctx context.Context, p *pb.Product) (*pb.Product, 
 		return nil, err
 	}
 
-	return created, nil
+	return &pb.Product{
+		Id:          id,
+		Name:        name,
+		Description: description,
+		Price:       price,
+		Quantity:    quantity,
+		Tags:        tags,
+		Available:   available,
+		CreatedAt:   timestamppb.New(createdAt),
+		UpdatedAt:   timestamppb.New(updatedAt),
+	}, nil
 }
 
 func (pr *productRepo) Delete(ctx context.Context, id string) error {
@@ -94,10 +111,10 @@ func (pr *productRepo) List(ctx context.Context, prevSize, pageSize int32, filte
 	}
 
 	b := builder.NewSQLBuilder().
-		Select("id", "description", "price", "quantity", "tags", "avaible", "created_at", "updated_at").
+		Select("id", "name", "description", "price", "quantity", "tags", "available", "created_at", "updated_at").
 		From("products").
-		Where("quantity > 0").
-		Where("avaible = true").
+		Where("quantity > ?", 0).
+		Where("available = ?", true).
 		OrderBy(ob).
 		Offset(int(prevSize)).
 		Limit(int(pageSize))
@@ -116,14 +133,31 @@ func (pr *productRepo) List(ctx context.Context, prevSize, pageSize int32, filte
 
 	products := make([]*pb.Product, 0, pageSize)
 	for rows.Next() {
-		var p pb.Product
+		var id, name, description string
+		var price float64
+		var quantity int32
+		var tags []string
+		var available bool
+		var createdAt, updatedAt time.Time
+		
 		if err := rows.Scan(
-			&p.Id, &p.Description, &p.Price, &p.Quantity,
-			&p.Tags, &p.Available, &p.CreatedAt, &p.UpdatedAt,
+			&id, &name, &description, &price, &quantity,
+			&tags, &available, &createdAt, &updatedAt,
 		); err != nil {
 			return nil, err
 		}
-		products = append(products, &p)
+		
+		products = append(products, &pb.Product{
+			Id:          id,
+			Name:        name,
+			Description: description,
+			Price:       price,
+			Quantity:    quantity,
+			Tags:        tags,
+			Available:   available,
+			CreatedAt:   timestamppb.New(createdAt),
+			UpdatedAt:   timestamppb.New(updatedAt),
+		})
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -136,10 +170,12 @@ func (pr *productRepo) Update(ctx context.Context, p *pb.Product, mask *fieldmas
     b := builder.NewSQLBuilder().
         Update("products").
         Where("id = ?", p.GetId()).
-        Returning("id", "description", "price", "quantity", "tags", "avaible", "created_at", "updated_at")
+        Returning("id", "name", "description", "price", "quantity", "tags", "available", "created_at", "updated_at")
 
     for _, path := range mask.GetPaths() {
         switch path {
+        case "name":
+            b.Set("name = ?", p.GetName())
         case "description":
             b.Set("description = ?", p.GetDescription())
         case "price":
@@ -148,8 +184,8 @@ func (pr *productRepo) Update(ctx context.Context, p *pb.Product, mask *fieldmas
             b.Set("quantity = ?", p.GetQuantity())
         case "tags":
             b.Set("tags = ?", p.GetTags())
-        case "avaible":
-            b.Set("avaible = ?", p.GetAvailable())
+        case "available":
+            b.Set("available = ?", p.GetAvailable())
         default:
             return nil, status.Errorf(codes.InvalidArgument, "unknown field in update_mask: %s", path)
         }
@@ -159,28 +195,63 @@ func (pr *productRepo) Update(ctx context.Context, p *pb.Product, mask *fieldmas
     sql, args := b.Build()
     row := pr.Pool.QueryRow(ctx, sql, args...)
 
-    var res pb.Product
+    var id, name, description string
+    var price float64
+    var quantity int32
+    var tags []string
+    var available bool
+    var createdAt, updatedAt time.Time
+    
     if err := row.Scan(
-        &res.Id, &res.Description, &res.Price, &res.Quantity,
-        &res.Tags, &res.Available, &res.CreatedAt, &res.UpdatedAt,
+        &id, &name, &description, &price, &quantity,
+        &tags, &available, &createdAt, &updatedAt,
     ); err != nil {
         return nil, status.Errorf(codes.Internal, "update failed: %v", err)
     }
 
-    return &res, nil
+    return &pb.Product{
+        Id:          id,
+        Name:        name,
+        Description: description,
+        Price:       price,
+        Quantity:    quantity,
+        Tags:        tags,
+        Available:   available,
+        CreatedAt:   timestamppb.New(createdAt),
+        UpdatedAt:   timestamppb.New(updatedAt),
+    }, nil
 }
 
 func (pr *productRepo) Get(ctx context.Context, id string) (*pb.Product, error) {
 	sql, args := builder.NewSQLBuilder(). 
-	Select("id", "description", "price", "quantity", "tags", "avaible", "created_at", "updated_at"). 
+	Select("id", "name", "description", "price", "quantity", "tags", "available", "created_at", "updated_at"). 
 	From("products"). 
 	Where("id = ?", id).Build()
 
-	var p pb.Product
+	var pid, name, description string
+	var price float64
+	var quantity int32
+	var tags []string
+	var available bool
+	var createdAt, updatedAt time.Time
+	
 	err := pr.Pool.QueryRow(ctx, sql, args...).Scan(
-		&p.Id, &p.Description, &p.Price, &p.Quantity,
-		&p.Tags, &p.Available, &p.CreatedAt, &p.UpdatedAt,
+		&pid, &name, &description, &price, &quantity,
+		&tags, &available, &createdAt, &updatedAt,
 	)
+	if err != nil {
+		return nil, err
+	}
 
-	return &p, err
+	return &pb.Product{
+		Id:          pid,
+		Name:        name,
+		Description: description,
+		Price:       price,
+		Quantity:    quantity,
+		Tags:        tags,
+		Available:   available,
+		CreatedAt:   timestamppb.New(createdAt),
+		UpdatedAt:   timestamppb.New(updatedAt),
+	}, nil
 }

@@ -33,7 +33,7 @@ func ExampleSQLBuilder_Where() {
 	fmt.Println(query)
 	fmt.Printf("%v\n", args)
 	// Output:
-	// SELECT id, name FROM users WHERE age > ? AND status = ?
+	// SELECT id, name FROM users WHERE age > $1 AND status = $2
 	// [18 active]
 }
 
@@ -51,7 +51,7 @@ func ExampleSQLBuilder_Limit() {
 	fmt.Println(query)
 	fmt.Printf("%v\n", args)
 	// Output:
-	// SELECT id, name, created_at FROM products WHERE category = ? ORDER BY created_at DESC LIMIT 10 OFFSET 20
+	// SELECT id, name, created_at FROM products WHERE category = $1 ORDER BY created_at DESC LIMIT 10 OFFSET 20
 	// [electronics]
 }
 
@@ -66,7 +66,7 @@ func ExampleSQLBuilder_Insert() {
 	fmt.Println(query)
 	fmt.Printf("%v\n", args)
 	// Output:
-	// INSERT INTO users (name, email, age) VALUES (?, ?, ?)
+	// INSERT INTO users (name, email, age) VALUES ($1, $2, $3)
 	// [John Doe john@example.com 30]
 }
 
@@ -82,7 +82,7 @@ func ExampleSQLBuilder_Update() {
 	fmt.Println(query)
 	fmt.Printf("%v\n", args)
 	// Output:
-	// UPDATE users SET name = ?, age = ? WHERE id = ?
+	// UPDATE users SET name = $1, age = $2 WHERE id = $3
 	// [Jane Doe 31 123]
 }
 
@@ -97,7 +97,7 @@ func ExampleSQLBuilder_Delete() {
 	fmt.Println(query)
 	fmt.Printf("%v\n", args)
 	// Output:
-	// DELETE FROM users WHERE id = ?
+	// DELETE FROM users WHERE id = $1
 	// [123]
 }
 
@@ -118,7 +118,7 @@ func ExampleSQLBuilder_Build() {
 	fmt.Println(query)
 	fmt.Printf("Args count: %d\n", len(args))
 	// Output:
-	// SELECT id, title, author, published_at FROM books WHERE published_at > ? AND status = ? AND price < ? ORDER BY published_at DESC LIMIT 5
+	// SELECT id, title, author, published_at FROM books WHERE published_at > $1 AND status = $2 AND price < $3 ORDER BY published_at DESC LIMIT 5
 	// Args count: 3
 }
 
@@ -145,7 +145,7 @@ func Example_usageWithDatabase() {
 	fmt.Println("Query:", query)
 	fmt.Printf("Args: %v\n", args)
 	// Output:
-	// Query: SELECT id, name, email FROM users WHERE status = ? LIMIT 10
+	// Query: SELECT id, name, email FROM users WHERE status = $1 LIMIT 10
 	// Args: [active]
 }
 
@@ -178,9 +178,9 @@ func Example_reusableBuilder() {
 	fmt.Println("Query 2:", query2)
 	fmt.Printf("Args 2: %v\n", args2)
 	// Output:
-	// Query 1: SELECT id, name, price FROM products WHERE status = ? AND price > ?
+	// Query 1: SELECT id, name, price FROM products WHERE status = $1 AND price > $2
 	// Args 1: [active 100]
-	// Query 2: SELECT id, name, price FROM products WHERE status = ? AND category = ?
+	// Query 2: SELECT id, name, price FROM products WHERE status = $1 AND category = $2
 	// Args 2: [active electronics]
 }
 
@@ -210,6 +210,6 @@ func Example_dynamicQueryBuilding() {
 	fmt.Println(query)
 	fmt.Printf("%v\n", args)
 	// Output:
-	// SELECT id, name, price FROM products WHERE category = ? AND price >= ?
+	// SELECT id, name, price FROM products WHERE category = $1 AND price >= $2
 	// [electronics 100]
 }

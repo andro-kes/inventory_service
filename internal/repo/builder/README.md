@@ -1,11 +1,12 @@
 # SQL Builder
 
-A lightweight, chainable SQL query builder for Go that provides a fluent API for constructing SQL queries dynamically.
+A lightweight, chainable SQL query builder for Go that provides a fluent API for constructing PostgreSQL-compatible SQL queries dynamically.
 
 ## Features
 
 - **Chainable API**: Build queries using method chaining for better readability
 - **Support for Basic SQL Commands**: SELECT, INSERT, UPDATE, DELETE
+- **PostgreSQL Compatible**: Generates positional placeholders ($1, $2, ...) for use with pgx
 - **Type-safe**: Uses Go interfaces for parameter binding
 - **Well-documented**: Comprehensive documentation and examples
 - **Well-tested**: Extensive test coverage with real-world scenarios
@@ -46,7 +47,7 @@ query, args := builder.NewSQLBuilder().
     Where("age > ?", 18).
     Where("status = ?", "active").
     Build()
-// Result: SELECT id, name FROM users WHERE age > ? AND status = ?
+// Result: SELECT id, name FROM users WHERE age > $1 AND status = $2
 // Args: [18, "active"]
 ```
 
@@ -62,7 +63,7 @@ query, args := builder.NewSQLBuilder().
     Offset(20).
     Build()
 // Result: SELECT id, name, created_at FROM products 
-//         WHERE category = ? ORDER BY created_at DESC LIMIT 10 OFFSET 20
+//         WHERE category = $1 ORDER BY created_at DESC LIMIT 10 OFFSET 20
 ```
 
 ### INSERT Queries
@@ -75,7 +76,7 @@ query, args := builder.NewSQLBuilder().
     Columns("name", "email", "age").
     Values("John Doe", "john@example.com", 30).
     Build()
-// Result: INSERT INTO users (name, email, age) VALUES (?, ?, ?)
+// Result: INSERT INTO users (name, email, age) VALUES ($1, $2, $3)
 // Args: ["John Doe", "john@example.com", 30]
 ```
 
@@ -86,7 +87,7 @@ query, args := builder.NewSQLBuilder().
     Insert("users").
     Values("John Doe", "john@example.com", 30).
     Build()
-// Result: INSERT INTO users VALUES (?, ?, ?)
+// Result: INSERT INTO users VALUES ($1, $2, $3)
 ```
 
 ### UPDATE Queries
@@ -100,7 +101,7 @@ query, args := builder.NewSQLBuilder().
     Set("age = ?", 31).
     Where("id = ?", 123).
     Build()
-// Result: UPDATE users SET name = ?, age = ? WHERE id = ?
+// Result: UPDATE users SET name = $1, age = $2 WHERE id = $3
 // Args: ["Jane Doe", 31, 123]
 ```
 
@@ -114,8 +115,8 @@ query, args := builder.NewSQLBuilder().
     Where("category = ?", "electronics").
     Where("stock > ?", 0).
     Build()
-// Result: UPDATE products SET price = ?, discount = ? 
-//         WHERE category = ? AND stock > ?
+// Result: UPDATE products SET price = $1, discount = $2 
+//         WHERE category = $3 AND stock > $4
 ```
 
 ### DELETE Queries
@@ -128,7 +129,7 @@ query, args := builder.NewSQLBuilder().
     From("users").
     Where("id = ?", 123).
     Build()
-// Result: DELETE FROM users WHERE id = ?
+// Result: DELETE FROM users WHERE id = $1
 // Args: [123]
 ```
 
@@ -141,20 +142,20 @@ query, args := builder.NewSQLBuilder().
     Where("age < ?", 18).
     Where("status = ?", "inactive").
     Build()
-// Result: DELETE FROM users WHERE age < ? AND status = ?
+// Result: DELETE FROM users WHERE age < $1 AND status = $2
 ```
 
-## Using with database/sql
+## Using with PostgreSQL/pgx
 
-The builder generates parameterized queries that work seamlessly with Go's `database/sql` package:
+The builder generates parameterized queries with PostgreSQL positional placeholders that work seamlessly with pgx:
 
 ```go
 import (
-    "database/sql"
     "github.com/andro-kes/inventory_service/builder"
+    "github.com/jackc/pgx/v5/pgxpool"
 )
 
-func getActiveUsers(db *sql.DB) ([]*User, error) {
+func getActiveUsers(pool *pgxpool.Pool, ctx context.Context) ([]*User, error) {
     query, args := builder.NewSQLBuilder().
         Select("id", "name", "email").
         From("users").
@@ -163,7 +164,7 @@ func getActiveUsers(db *sql.DB) ([]*User, error) {
         Limit(100).
         Build()
     
-    rows, err := db.Query(query, args...)
+    rows, err := pool.Query(ctx, query, args...)
     if err != nil {
         return nil, err
     }
@@ -172,6 +173,24 @@ func getActiveUsers(db *sql.DB) ([]*User, error) {
     // Process rows...
     return users, nil
 }
+```
+
+## Placeholder Syntax
+
+When writing WHERE conditions or SET clauses, use `?` as placeholders. The builder automatically converts them to PostgreSQL-style positional placeholders ($1, $2, ...) in the correct order:
+
+```go
+// Input with ? placeholders
+builder.NewSQLBuilder().
+    Select("*").
+    From("products").
+    Where("price > ?", 100).
+    Where("category IN (?, ?)", "electronics", "computers").
+    Build()
+
+// Output with $N placeholders
+// SELECT * FROM products WHERE price > $1 AND category IN ($2, $3)
+// Args: [100, "electronics", "computers"]
 ```
 
 ## Dynamic Query Building
@@ -271,7 +290,7 @@ go test -cover ./builder/...
 - Does not support JOIN operations (can be added in future versions)
 - Does not support subqueries (can be added in future versions)
 - Does not support UNION operations (can be added in future versions)
-- Placeholders are always `?` (not database-specific like `$1`, `$2` for PostgreSQL)
+- Generates PostgreSQL-style placeholders ($1, $2, ...) - designed for use with pgx/PostgreSQL
 
 ## License
 
