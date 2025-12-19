@@ -12,18 +12,18 @@ import (
 )
 
 type Config struct {
-	Level string
-	Encoding string
-	OutputPaths []string
+	Level            string
+	Encoding         string
+	OutputPaths      []string
 	ErrorOutputPaths []string
-	FileRotation bool
-	Filename     string
-	MaxSize      int  
-	MaxBackups   int  
-	MaxAge       int  
-	Compress     bool 
-	Development bool
-	TimeEncoder zapcore.TimeEncoder
+	FileRotation     bool
+	Filename         string
+	MaxSize          int
+	MaxBackups       int
+	MaxAge           int
+	Compress         bool
+	Development      bool
+	TimeEncoder      zapcore.TimeEncoder
 }
 
 var (

@@ -71,11 +71,11 @@ func main() {
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
-	
+
 	select {
 	case sig := <-shutdown:
 		zl.Info("Server shutdown...", zap.Any("signal", sig))
-	case err := <- serveErr:
+	case err := <-serveErr:
 		zl.Error(err.Error())
 		panic("failed to start inventory service")
 	}
@@ -99,7 +99,7 @@ func NewPool(ctx context.Context, zl *zap.Logger, dbURL string) (*pgxpool.Pool, 
 		zl.Error(err.Error())
 		return nil, inverr.CreatePoolError
 	}
-	
+
 	attempts := 5
 	delay := time.Second
 	for i := 0; i < attempts; i++ {

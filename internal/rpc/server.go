@@ -11,10 +11,10 @@ import (
 
 type InventoryService struct {
 	pb.UnimplementedInventoryServiceServer
-	ProductService services.ProductService
+	ProductService *services.ProductService
 }
 
-func NewInventoryService(ctx context.Context, pool *pgxpool.Pool) *InventoryService{
+func NewInventoryService(ctx context.Context, pool *pgxpool.Pool) *InventoryService {
 	return &InventoryService{
 		ProductService: services.NewProductService(ctx, pool),
 	}
@@ -33,7 +33,7 @@ func (is *InventoryService) CreateProduct(ctx context.Context, req *pb.CreateReq
 
 func (is *InventoryService) DeleteProduct(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResponse, error) {
 	var resp *pb.DeleteResponse
-	
+
 	err := is.ProductService.Delete(ctx, req.Id)
 	if err != nil {
 		resp.Success = false
@@ -47,7 +47,7 @@ func (is *InventoryService) DeleteProduct(ctx context.Context, req *pb.DeleteReq
 func (is *InventoryService) ListProducts(ctx context.Context, req *pb.ListRequest) (*pb.ListResponse, error) {
 	var resp *pb.ListResponse
 
-	products, err := is.ProductService.Lists(ctx, req.PageSize, req.Filter, req.OrderBy)
+	products, err := is.ProductService.List(ctx, req.PageSize, req.Filter, req.OrderBy)
 	if err != nil {
 		return nil, inverr.ListProductsError
 	}
@@ -57,9 +57,27 @@ func (is *InventoryService) ListProducts(ctx context.Context, req *pb.ListReques
 }
 
 func (is *InventoryService) UpdateProduct(ctx context.Context, req *pb.UpdateRequest) (*pb.UpdateResponse, error) {
-	
+	var resp *pb.UpdateResponse
+
+	product, err := is.ProductService.Update(ctx, req.Product)
+	if err != nil {
+		return nil, err
+	}
+
+	resp.Product = product
+
+	return resp, nil
 }
 
 func (is *InventoryService) GetProduct(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
+	var resp *pb.GetResponse
 
+	product, err := is.ProductService.Get(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	resp.Product = product
+
+	return resp, nil
 }
