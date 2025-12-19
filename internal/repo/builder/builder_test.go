@@ -45,7 +45,7 @@ func TestSelectWithWhere(t *testing.T) {
 		Where("age > ?", 18).
 		Build()
 
-	expected := "SELECT id, name FROM users WHERE age > ?"
+	expected := "SELECT id, name FROM users WHERE age > $1"
 	if query != expected {
 		t.Errorf("Expected query: %s, got: %s", expected, query)
 	}
@@ -63,7 +63,7 @@ func TestSelectWithMultipleWhere(t *testing.T) {
 		Where("status = ?", "active").
 		Build()
 
-	expected := "SELECT id, name FROM users WHERE age > ? AND status = ?"
+	expected := "SELECT id, name FROM users WHERE age > $1 AND status = $2"
 	if query != expected {
 		t.Errorf("Expected query: %s, got: %s", expected, query)
 	}
@@ -138,7 +138,7 @@ func TestSelectComplex(t *testing.T) {
 		Offset(20).
 		Build()
 
-	expected := "SELECT id, name, email, created_at FROM users WHERE age > ? AND status = ? ORDER BY created_at DESC LIMIT 10 OFFSET 20"
+	expected := "SELECT id, name, email, created_at FROM users WHERE age > $1 AND status = $2 ORDER BY created_at DESC LIMIT 10 OFFSET 20"
 	if query != expected {
 		t.Errorf("Expected query: %s, got: %s", expected, query)
 	}
@@ -155,7 +155,7 @@ func TestInsertBasic(t *testing.T) {
 		Values("John Doe", "john@example.com", 30).
 		Build()
 
-	expected := "INSERT INTO users (name, email, age) VALUES (?, ?, ?)"
+	expected := "INSERT INTO users (name, email, age) VALUES ($1, $2, $3)"
 	if query != expected {
 		t.Errorf("Expected query: %s, got: %s", expected, query)
 	}
@@ -174,7 +174,7 @@ func TestInsertWithoutColumns(t *testing.T) {
 		Values("John Doe", "john@example.com", 30).
 		Build()
 
-	expected := "INSERT INTO users VALUES (?, ?, ?)"
+	expected := "INSERT INTO users VALUES ($1, $2, $3)"
 	if query != expected {
 		t.Errorf("Expected query: %s, got: %s", expected, query)
 	}
@@ -191,7 +191,7 @@ func TestInsertMultipleValues(t *testing.T) {
 		Values("Laptop", 999.99).
 		Build()
 
-	expected := "INSERT INTO products (name, price) VALUES (?, ?)"
+	expected := "INSERT INTO products (name, price) VALUES ($1, $2)"
 	if query != expected {
 		t.Errorf("Expected query: %s, got: %s", expected, query)
 	}
@@ -208,7 +208,7 @@ func TestUpdateBasic(t *testing.T) {
 		Where("id = ?", 123).
 		Build()
 
-	expected := "UPDATE users SET name = ? WHERE id = ?"
+	expected := "UPDATE users SET name = $1 WHERE id = $2"
 	if query != expected {
 		t.Errorf("Expected query: %s, got: %s", expected, query)
 	}
@@ -231,7 +231,7 @@ func TestUpdateMultipleSets(t *testing.T) {
 		Where("id = ?", 123).
 		Build()
 
-	expected := "UPDATE users SET name = ?, age = ?, updated_at = ? WHERE id = ?"
+	expected := "UPDATE users SET name = $1, age = $2, updated_at = $3 WHERE id = $4"
 	if query != expected {
 		t.Errorf("Expected query: %s, got: %s", expected, query)
 	}
@@ -249,7 +249,7 @@ func TestUpdateWithMultipleWhere(t *testing.T) {
 		Where("last_login < ?", "2020-01-01").
 		Build()
 
-	expected := "UPDATE users SET status = ? WHERE age < ? AND last_login < ?"
+	expected := "UPDATE users SET status = $1 WHERE age < $2 AND last_login < $3"
 	if query != expected {
 		t.Errorf("Expected query: %s, got: %s", expected, query)
 	}
@@ -265,7 +265,7 @@ func TestUpdateWithoutWhere(t *testing.T) {
 		Set("status = ?", "active").
 		Build()
 
-	expected := "UPDATE users SET status = ?"
+	expected := "UPDATE users SET status = $1"
 	if query != expected {
 		t.Errorf("Expected query: %s, got: %s", expected, query)
 	}
@@ -282,7 +282,7 @@ func TestDeleteBasic(t *testing.T) {
 		Where("id = ?", 123).
 		Build()
 
-	expected := "DELETE FROM users WHERE id = ?"
+	expected := "DELETE FROM users WHERE id = $1"
 	if query != expected {
 		t.Errorf("Expected query: %s, got: %s", expected, query)
 	}
@@ -303,7 +303,7 @@ func TestDeleteWithMultipleWhere(t *testing.T) {
 		Where("status = ?", "inactive").
 		Build()
 
-	expected := "DELETE FROM users WHERE age < ? AND status = ?"
+	expected := "DELETE FROM users WHERE age < $1 AND status = $2"
 	if query != expected {
 		t.Errorf("Expected query: %s, got: %s", expected, query)
 	}
@@ -388,7 +388,7 @@ func TestMultipleWhereArgs(t *testing.T) {
 		Where("id IN (?, ?, ?)", 1, 2, 3).
 		Build()
 
-	expected := "SELECT id, name FROM users WHERE id IN (?, ?, ?)"
+	expected := "SELECT id, name FROM users WHERE id IN ($1, $2, $3)"
 	if query != expected {
 		t.Errorf("Expected query: %s, got: %s", expected, query)
 	}
@@ -413,7 +413,7 @@ func TestComplexRealWorldScenarios(t *testing.T) {
 		Offset(40).
 		Build()
 
-	expectedQuery := "SELECT id, name, email, created_at FROM users WHERE status = ? AND role IN (?, ?) ORDER BY created_at DESC LIMIT 20 OFFSET 40"
+	expectedQuery := "SELECT id, name, email, created_at FROM users WHERE status = $1 AND role IN ($2, $3) ORDER BY created_at DESC LIMIT 20 OFFSET 40"
 	if query != expectedQuery {
 		t.Errorf("Expected query: %s, got: %s", expectedQuery, query)
 	}
@@ -432,7 +432,7 @@ func TestComplexRealWorldScenarios(t *testing.T) {
 		Where("stock > ?", 0).
 		Build()
 
-	expectedQuery2 := "UPDATE products SET price = ?, discount = ?, updated_at = ? WHERE category = ? AND stock > ?"
+	expectedQuery2 := "UPDATE products SET price = $1, discount = $2, updated_at = $3 WHERE category = $4 AND stock > $5"
 	if query2 != expectedQuery2 {
 		t.Errorf("Expected query: %s, got: %s", expectedQuery2, query2)
 	}
@@ -448,7 +448,7 @@ func TestComplexRealWorldScenarios(t *testing.T) {
 		Where("user_id IS NOT NULL").
 		Build()
 
-	expectedQuery3 := "DELETE FROM sessions WHERE expires_at < ? AND user_id IS NOT NULL"
+	expectedQuery3 := "DELETE FROM sessions WHERE expires_at < $1 AND user_id IS NOT NULL"
 	if query3 != expectedQuery3 {
 		t.Errorf("Expected query: %s, got: %s", expectedQuery3, query3)
 	}
