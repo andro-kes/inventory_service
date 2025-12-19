@@ -33,9 +33,9 @@ func NewProductRepo(ctx context.Context, pool *pgxpool.Pool) ProductRepo {
 func (pr *productRepo) Create(ctx context.Context, p *pb.Product) (*pb.Product, error) {
 	sql, args := builder.NewSQLBuilder().
 	Insert("products").
-	Columns("id", "description", "price", "quantity", "tags", "avaible", "created_at", "updated_at").
+	Columns("id", "description", "price", "quantity", "tags", "available", "created_at", "updated_at").
 	Values(p.Id, p.Description, p.Price, p.Quantity, p.Tags, p.Available, time.Now(), time.Now()).
-	Returning("id", "description", "price", "quantity", "tags", "avaible", "created_at", "updated_at").
+	Returning("id", "description", "price", "quantity", "tags", "available", "created_at", "updated_at").
 	Build()
 
 	tx, err := pr.Pool.Begin(ctx)
