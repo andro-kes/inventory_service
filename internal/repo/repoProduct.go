@@ -41,16 +41,8 @@ func (pr *productRepo) Create(ctx context.Context, p *pb.Product) (*pb.Product, 
 	tx, err := pr.Pool.Begin(ctx)
 	if err != nil {
 		return nil, err
-		Insert("products").
-		Columns("id", "description", "price", "quantity", "tags", "avaible", "created_at", "updated_at").
-		Values(p.Id, p.Description, p.Price, p.Quantity, p.Tags, p.Available, time.Now(), time.Now()).
-		Returning("id", "description", "price", "quantity", "tags", "avaible", "created_at", "updated_at").
-		Build()
-
-	tx, err := pr.Pool.Begin(ctx)
-	if err != nil {
-		return nil, err
 	}
+	
 	defer func() {
 		_ = tx.Rollback(ctx)
 	}()
