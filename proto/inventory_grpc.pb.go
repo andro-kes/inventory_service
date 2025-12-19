@@ -140,7 +140,7 @@ type UnsafeInventoryServiceServer interface {
 }
 
 func RegisterInventoryServiceServer(s grpc.ServiceRegistrar, srv InventoryServiceServer) {
-	// If the following call panics, it indicates UnimplementedInventoryServiceServer was
+	// If the following call pancis, it indicates UnimplementedInventoryServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
