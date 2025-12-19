@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andro-kes/inventory_service/builder"
+	"github.com/andro-kes/inventory_service/internal/repo/builder"
 )
 
 // ExampleSQLBuilder_Select demonstrates a basic SELECT query.

@@ -30,6 +30,7 @@ message Product {
 
 message ListRequest {
     int32 page_size = 1;
+    int32 prev_size = 2;
     string filter = 3;
     string order_by = 4;
 }

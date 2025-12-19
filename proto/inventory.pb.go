@@ -134,6 +134,7 @@ func (x *Product) GetUpdatedAt() *timestamppb.Timestamp {
 type ListRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PageSize      int32                  `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PrevSize      int32                  `protobuf:"varint,2,opt,name=prev_size,json=prevSize,proto3" json:"prev_size,omitempty"`
 	Filter        string                 `protobuf:"bytes,3,opt,name=filter,proto3" json:"filter,omitempty"`
 	OrderBy       string                 `protobuf:"bytes,4,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -173,6 +174,13 @@ func (*ListRequest) Descriptor() ([]byte, []int) {
 func (x *ListRequest) GetPageSize() int32 {
 	if x != nil {
 		return x.PageSize
+	}
+	return 0
+}
+
+func (x *ListRequest) GetPrevSize() int32 {
+	if x != nil {
+		return x.PrevSize
 	}
 	return 0
 }
@@ -619,9 +627,10 @@ const file_inventory_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"]\n" +
+	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"z\n" +
 	"\vListRequest\x12\x1b\n" +
-	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x16\n" +
+	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x1b\n" +
+	"\tprev_size\x18\x02 \x01(\x05R\bprevSize\x12\x16\n" +
 	"\x06filter\x18\x03 \x01(\tR\x06filter\x12\x19\n" +
 	"\border_by\x18\x04 \x01(\tR\aorderBy\"]\n" +
 	"\fListResponse\x12.\n" +

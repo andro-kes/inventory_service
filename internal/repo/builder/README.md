@@ -22,7 +22,7 @@ go get github.com/andro-kes/inventory_service/builder
 ### Import
 
 ```go
-import "github.com/andro-kes/inventory_service/builder"
+import "github.com/andro-kes/inventory_service/internal/repo/builder"
 ```
 
 ### SELECT Queries

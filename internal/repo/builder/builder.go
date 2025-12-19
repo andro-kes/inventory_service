@@ -25,6 +25,7 @@ import (
 //		Insert("products").
 //		Columns("name", "price", "category").
 //		Values("Laptop", 999.99, "electronics").
+//		Returning("id").
 //		Build()
 //
 //	// UPDATE query
@@ -33,6 +34,7 @@ import (
 //		Set("price = ?", 899.99).
 //		Set("updated_at = ?", time.Now()).
 //		Where("id = ?", 123).
+//		Returning("id").
 //		Build()
 //
 //	// DELETE query
@@ -40,18 +42,20 @@ import (
 //		Delete().
 //		From("products").
 //		Where("id = ?", 123).
+//		Returning("id").
 //		Build()
 type SQLBuilder struct {
-	queryType   string   // SELECT, INSERT, UPDATE, DELETE
-	selectCols  []string // Columns for SELECT
-	tableName   string   // Table name
-	insertCols  []string // Columns for INSERT
-	values      []any
-	setClauses  []setClause
-	whereConds  []whereCondition
-	orderByCol  string
-	limitVal    int
-	offsetVal   int
+	queryType  string   // SELECT, INSERT, UPDATE, DELETE
+	selectCols []string // Columns for SELECT
+	tableName  string   // Table name
+	insertCols []string // Columns for INSERT
+	returning  []string
+	values     []any
+	setClauses []setClause
+	whereConds []whereCondition
+	orderByCol string
+	limitVal   int
+	offsetVal  int
 }
 
 type setClause struct {
@@ -153,6 +157,11 @@ func (b *SQLBuilder) Set(clause string, args ...any) *SQLBuilder {
 		clause: clause,
 		args:   args,
 	})
+	return b
+}
+
+func (b *SQLBuilder) Returning(columns ...string) *SQLBuilder {
+	b.returning = append(b.returning, columns...)
 	return b
 }
 
@@ -304,6 +313,12 @@ func (b *SQLBuilder) buildInsert() (string, []any) {
 	query.WriteString(strings.Join(placeholders, ", "))
 	query.WriteString(")")
 
+	// RETURNING clause
+	if len(b.returning) > 0 {
+		query.WriteString(" RETURNING ")
+		query.WriteString(strings.Join(b.returning, ", "))
+	}
+
 	return query.String(), b.values
 }
 
@@ -337,6 +352,12 @@ func (b *SQLBuilder) buildUpdate() (string, []any) {
 		query.WriteString(strings.Join(conditions, " AND "))
 	}
 
+	// RETURNING clause
+	if len(b.returning) > 0 {
+		query.WriteString(" RETURNING ")
+		query.WriteString(strings.Join(b.returning, ", "))
+	}
+
 	return query.String(), args
 }
 
@@ -357,6 +378,12 @@ func (b *SQLBuilder) buildDelete() (string, []any) {
 			args = append(args, cond.args...)
 		}
 		query.WriteString(strings.Join(conditions, " AND "))
+	}
+
+	// RETURNING clause
+	if len(b.returning) > 0 {
+		query.WriteString(" RETURNING ")
+		query.WriteString(strings.Join(b.returning, ", "))
 	}
 
 	return query.String(), args
