@@ -43,14 +43,23 @@ func (pr *productRepo) Create(ctx context.Context, p *pb.Product) (*pb.Product, 
 		return nil, err
 	}
 
-	var created *pb.Product
+	created := *p
 	row := tx.QueryRow(ctx, sql, args)
-	err = row.Scan(&created)
+	err = row.Scan(
+		&created.Id,
+		&created.Description,
+		&created.Price,
+		&created.Quantity,
+		&created.Tags,
+		&created.Available,
+		&created.CreatedAt,
+		&created.UpdatedAt,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	return created, nil
+	return &created, nil
 }
 
 func (pr *productRepo) Delete(ctx context.Context, id string) error {
