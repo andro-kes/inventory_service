@@ -43,7 +43,7 @@ func (pr *productRepo) Create(ctx context.Context, p *pb.Product) (*pb.Product, 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	defer func() {
 		_ = tx.Rollback(ctx)
 	}()
@@ -54,7 +54,7 @@ func (pr *productRepo) Create(ctx context.Context, p *pb.Product) (*pb.Product, 
 	var tags []string
 	var available bool
 	var createdAt, updatedAt time.Time
-	
+
 	row := tx.QueryRow(ctx, sql, args...)
 	err = row.Scan(&id, &name, &description, &price, &quantity, &tags, &available, &createdAt, &updatedAt)
 	if err != nil {
@@ -139,14 +139,14 @@ func (pr *productRepo) List(ctx context.Context, prevSize, pageSize int32, filte
 		var tags []string
 		var available bool
 		var createdAt, updatedAt time.Time
-		
+
 		if err := rows.Scan(
 			&id, &name, &description, &price, &quantity,
 			&tags, &available, &createdAt, &updatedAt,
 		); err != nil {
 			return nil, err
 		}
-		
+
 		products = append(products, &pb.Product{
 			Id:          id,
 			Name:        name,
@@ -201,7 +201,7 @@ func (pr *productRepo) Update(ctx context.Context, p *pb.Product, mask *fieldmas
     var tags []string
     var available bool
     var createdAt, updatedAt time.Time
-    
+
     if err := row.Scan(
         &id, &name, &description, &price, &quantity,
         &tags, &available, &createdAt, &updatedAt,
@@ -223,9 +223,9 @@ func (pr *productRepo) Update(ctx context.Context, p *pb.Product, mask *fieldmas
 }
 
 func (pr *productRepo) Get(ctx context.Context, id string) (*pb.Product, error) {
-	sql, args := builder.NewSQLBuilder(). 
-	Select("id", "name", "description", "price", "quantity", "tags", "available", "created_at", "updated_at"). 
-	From("products"). 
+	sql, args := builder.NewSQLBuilder().
+	Select("id", "name", "description", "price", "quantity", "tags", "available", "created_at", "updated_at").
+	From("products").
 	Where("id = ?", id).Build()
 
 	var pid, name, description string
@@ -234,7 +234,7 @@ func (pr *productRepo) Get(ctx context.Context, id string) (*pb.Product, error) 
 	var tags []string
 	var available bool
 	var createdAt, updatedAt time.Time
-	
+
 	err := pr.Pool.QueryRow(ctx, sql, args...).Scan(
 		&pid, &name, &description, &price, &quantity,
 		&tags, &available, &createdAt, &updatedAt,
