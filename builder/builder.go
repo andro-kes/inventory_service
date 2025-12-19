@@ -46,7 +46,7 @@ type SQLBuilder struct {
 	selectCols  []string // Columns for SELECT
 	tableName   string   // Table name
 	insertCols  []string // Columns for INSERT
-	values      []interface{}
+	values      []any
 	setClauses  []setClause
 	whereConds  []whereCondition
 	orderByCol  string
@@ -56,12 +56,12 @@ type SQLBuilder struct {
 
 type setClause struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 type whereCondition struct {
 	condition string
-	args      []interface{}
+	args      []any
 }
 
 // NewSQLBuilder creates a new SQLBuilder instance.
@@ -69,7 +69,7 @@ func NewSQLBuilder() *SQLBuilder {
 	return &SQLBuilder{
 		selectCols: make([]string, 0),
 		insertCols: make([]string, 0),
-		values:     make([]interface{}, 0),
+		values:     make([]any, 0),
 		setClauses: make([]setClause, 0),
 		whereConds: make([]whereCondition, 0),
 		limitVal:   -1,
@@ -126,7 +126,7 @@ func (b *SQLBuilder) Columns(columns ...string) *SQLBuilder {
 // Example:
 //
 //	builder.Values("John Doe", "john@example.com", 30)
-func (b *SQLBuilder) Values(values ...interface{}) *SQLBuilder {
+func (b *SQLBuilder) Values(values ...any) *SQLBuilder {
 	b.values = append(b.values, values...)
 	return b
 }
@@ -148,7 +148,7 @@ func (b *SQLBuilder) Update(table string) *SQLBuilder {
 // Example:
 //
 //	builder.Set("name = ?", "Jane Doe").Set("age = ?", 31)
-func (b *SQLBuilder) Set(clause string, args ...interface{}) *SQLBuilder {
+func (b *SQLBuilder) Set(clause string, args ...any) *SQLBuilder {
 	b.setClauses = append(b.setClauses, setClause{
 		clause: clause,
 		args:   args,
@@ -172,7 +172,7 @@ func (b *SQLBuilder) Delete() *SQLBuilder {
 // Example:
 //
 //	builder.Where("age > ?", 18).Where("status = ?", "active")
-func (b *SQLBuilder) Where(condition string, args ...interface{}) *SQLBuilder {
+func (b *SQLBuilder) Where(condition string, args ...any) *SQLBuilder {
 	b.whereConds = append(b.whereConds, whereCondition{
 		condition: condition,
 		args:      args,
@@ -217,7 +217,7 @@ func (b *SQLBuilder) Offset(offset int) *SQLBuilder {
 //
 //	query, args := builder.Build()
 //	// Use with database/sql: db.Query(query, args...)
-func (b *SQLBuilder) Build() (string, []interface{}) {
+func (b *SQLBuilder) Build() (string, []any) {
 	switch b.queryType {
 	case "SELECT":
 		return b.buildSelect()
@@ -233,9 +233,9 @@ func (b *SQLBuilder) Build() (string, []interface{}) {
 }
 
 // buildSelect constructs a SELECT query.
-func (b *SQLBuilder) buildSelect() (string, []interface{}) {
+func (b *SQLBuilder) buildSelect() (string, []any) {
 	var query strings.Builder
-	args := make([]interface{}, 0)
+	args := make([]any, 0)
 
 	// SELECT clause
 	query.WriteString("SELECT ")
@@ -282,7 +282,7 @@ func (b *SQLBuilder) buildSelect() (string, []interface{}) {
 }
 
 // buildInsert constructs an INSERT query.
-func (b *SQLBuilder) buildInsert() (string, []interface{}) {
+func (b *SQLBuilder) buildInsert() (string, []any) {
 	var query strings.Builder
 
 	query.WriteString("INSERT INTO ")
@@ -308,9 +308,9 @@ func (b *SQLBuilder) buildInsert() (string, []interface{}) {
 }
 
 // buildUpdate constructs an UPDATE query.
-func (b *SQLBuilder) buildUpdate() (string, []interface{}) {
+func (b *SQLBuilder) buildUpdate() (string, []any) {
 	var query strings.Builder
-	args := make([]interface{}, 0)
+	args := make([]any, 0)
 
 	query.WriteString("UPDATE ")
 	query.WriteString(b.tableName)
@@ -341,9 +341,9 @@ func (b *SQLBuilder) buildUpdate() (string, []interface{}) {
 }
 
 // buildDelete constructs a DELETE query.
-func (b *SQLBuilder) buildDelete() (string, []interface{}) {
+func (b *SQLBuilder) buildDelete() (string, []any) {
 	var query strings.Builder
-	args := make([]interface{}, 0)
+	args := make([]any, 0)
 
 	query.WriteString("DELETE FROM ")
 	query.WriteString(b.tableName)
