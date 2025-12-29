@@ -98,7 +98,8 @@ chmod +x proto/make_proto.sh
 По умолчанию: уровень `debug`, формат `console`, вывод в stdout (`cmd/server/main.go`). При необходимости настройте `internal/logger.Config` (JSON, ротация, файлы).
 
 ## TODO
-- Добавить health-check endpoint/метод.
-- Добавить пример docker-compose и миграций под PostgreSQL.
-- Описать схемы БД (DDL) и реальный фильтр по тегам.
-- Добавить секцию об авторизации/ACL (если потребуется).
+- [] Добавить health-check endpoint/метод.
+- [] Добавить пример docker-compose и миграций под PostgreSQL.
+- [] Описать схемы БД (DDL) и реальный фильтр по тегам.
+- [] Добавить секцию об авторизации/ACL (если потребуется).
+- [] Добавить тесты.
