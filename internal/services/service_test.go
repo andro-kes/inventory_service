@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"strconv"
 	"testing"
 	"time"
 
@@ -50,6 +51,7 @@ func (r *TestRepo) Get(ctx context.Context, id string) (*pb.Product, error) {
 	return r.Storage[id].(*pb.Product), nil
 }
 
+// Пока не тестируем фильтры
 func (r *TestRepo) List(ctx context.Context, prevSize, pageSize int32, filter, orderBy string) ([]*pb.Product, error) {
 	if r.Err != nil {
 		return nil, r.Err
@@ -79,9 +81,10 @@ func (r *TestRepo) Update(ctx context.Context, p *pb.Product, mask *fieldmaskpb.
 		case mask.Paths[0] == "name":
 			r.Storage[p.Id].(*pb.Product).Name = p.Name
 		}
+		return p, nil
 	}
 
-	return p, nil
+	return nil, assert.AnError
 }
 
 func NewTestService(err error) *ProductService {
@@ -95,7 +98,7 @@ func NewTestService(err error) *ProductService {
 	}
 }
 
-var testProduct = &pb.Product{
+var testProduct = pb.Product{
 	Id:          "1",
 	Name:        "test",
 	Description: "test",
@@ -110,7 +113,7 @@ var testProduct = &pb.Product{
 func TestCreate(t *testing.T) {
 	service := NewTestService(nil)
 
-	p, err := service.Create(t.Context(), testProduct)
+	p, err := service.Create(t.Context(), &testProduct)
 	assert.NoError(t, err)
 
 	assert.Equal(t, p.Id, testProduct.Id)
@@ -118,4 +121,58 @@ func TestCreate(t *testing.T) {
 	assert.Equal(t, p.Description, testProduct.Description)
 	assert.Equal(t, p.Price, testProduct.Price)
 	assert.Equal(t, p.Quantity, testProduct.Quantity)
+}
+
+func TestCreateDelete(t *testing.T) {
+	service := NewTestService(nil)
+
+	p, err := service.Create(t.Context(), &testProduct)
+	assert.NoError(t, err)
+
+	err = service.Delete(t.Context(), p.Id)
+	assert.NoError(t, err)
+}
+
+func TestCreateGet(t *testing.T) {
+	service := NewTestService(nil) 
+
+	p, err := service.Create(t.Context(), &testProduct)
+	assert.NoError(t, err)
+
+	p, err = service.Get(t.Context(), p.Id)
+	assert.NoError(t, err)
+
+	assert.Equal(t, p.Id, testProduct.Id)
+	assert.Equal(t, p.Name, testProduct.Name)
+	assert.Equal(t, p.Description, testProduct.Description)
+	assert.Equal(t, p.Price, testProduct.Price)
+	assert.Equal(t, p.Quantity, testProduct.Quantity)
+}
+
+func TestCreateUpdate(t *testing.T) {
+	service := NewTestService(nil) 
+
+	p, err := service.Create(t.Context(), &testProduct)
+	assert.NoError(t, err)
+
+	p.Name = "update"
+	u, err := service.Update(t.Context(), p, &fieldmaskpb.FieldMask{Paths: []string{"name"}})
+	assert.NoError(t, err)
+
+	assert.Equal(t, "update", u.Name)
+}
+
+func TestList(t *testing.T) {
+	s := NewTestService(nil)
+
+	for i := 1; i < 5; i++ {
+		id := strconv.Itoa(i)
+		testProduct.Id = id
+		_, err := s.Create(t.Context(), &testProduct)
+		assert.NoError(t, err)
+	}
+	
+	ps, err := s.List(t.Context(), 0, 0, "", "")
+	assert.NoError(t, err)
+	assert.Equal(t, 4, len(ps))
 }
